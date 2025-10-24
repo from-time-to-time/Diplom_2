@@ -1,5 +1,8 @@
-from src.stellar_burger_api import StellarBurgerApi
 import allure
+
+from src.data import Messages as M
+from src.data import HTTPStatus
+from src.stellar_burger_api import StellarBurgerApi
 
 
 class TestGetUserOrders:
@@ -14,7 +17,7 @@ class TestGetUserOrders:
             response = api.get_user_orders(headers={"Authorization": access_token})
 
         with allure.step("Проверяем, что возвращается пустой список заказов"):
-            assert response.status_code == 200, f"Ожидали 200, получили {response.status_code}: {response.text}"
+            assert response.status_code == HTTPStatus.OK, f"Ожидали 200, получили {response.status_code}: {response.text}"
             body = response.json()
             assert body.get("success") is True, f"Ожидали success=true, получили: {body.get('success')}"
             assert body.get("orders") == []
@@ -22,13 +25,13 @@ class TestGetUserOrders:
         with allure.step('Отправляем POST-запрос на создание заказа'):
             payload = {"ingredients": valid_ingredients}
             response = api.create_order(json=payload, headers={"Authorization": access_token})
-            assert response.status_code == 200, f"Ожидали 200, получили {response.status_code}: {getattr(response, 'text', '')}"
+            assert response.status_code == HTTPStatus.OK, f"Ожидали 200, получили {response.status_code}: {getattr(response, 'text', '')}"
 
         with allure.step('Снова отправляем GET-запрос на получение заказов пользователя'):
             response = api.get_user_orders(headers={"Authorization": access_token})
 
         with allure.step("Проверяем, что в списке возвращается созданный заказ"):
-            assert response.status_code == 200, f"Ожидали 200, получили {response.status_code}: {response.text}"
+            assert response.status_code == HTTPStatus.OK, f"Ожидали 200, получили {response.status_code}: {response.text}"
             data = response.json()
             assert data.get("success") is True, f"Ожидали success=true, получили: {data.get('success')}"
 
@@ -43,7 +46,7 @@ class TestGetUserOrders:
         with allure.step('Отправляем GET-запрос на получение заказов пользователя'):
             response = api.get_user_orders()
         with allure.step('Проверяем, что в ответе получили ошибку 401'):
-            assert response.status_code == 401
+            assert response.status_code == HTTPStatus.UNAUTHORIZED
 
             message = response.json()['message']
-            assert "You should be authorised" in message
+            assert M.UNAUTHORISED in message

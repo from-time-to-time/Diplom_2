@@ -1,7 +1,10 @@
-import pytest
 import random
-from src.stellar_burger_api import StellarBurgerApi
+
 import allure
+import pytest
+
+from src.data import HTTPStatus
+from src.stellar_burger_api import StellarBurgerApi
 
 
 class TestChangeData:
@@ -29,8 +32,8 @@ class TestChangeData:
                 new_value = body["name"] + "_upd"
             body[field] = new_value
         with allure.step('Отправляем PATCH-запрос с токеном и изменененным значением поля'):
-             response = api.update_user_data(json=body, headers={'Authorization': access_token})
-        assert response.status_code == 200, f"Ожидали 200, получили {response.status_code}: {getattr(response, 'text', '')}"
+            response = api.update_user_data(json=body, headers={'Authorization': access_token})
+        assert response.status_code == HTTPStatus.OK, f"Ожидали 200, получили {response.status_code}: {getattr(response, 'text', '')}"
         data = response.json()
         assert data.get("success") is True, f"success != true: {data}"
 
@@ -66,8 +69,8 @@ class TestChangeData:
                 new_value = body["name"] + "_upd"
             body[field] = new_value
         with allure.step('Отправляем PATCH-запрос без токена, с измененным значением поля'):
-             response = api.update_user_data(json=body)
-        assert response.status_code == 401, f"Ожидали 401, получили {response.status_code}: {getattr(response, 'text', '')}"
+            response = api.update_user_data(json=body)
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, f"Ожидали 401, получили {response.status_code}: {getattr(response, 'text', '')}"
         data = response.json()
         assert data.get("success") is False, f"success != false: {data}"
 
@@ -78,7 +81,8 @@ class TestChangeData:
             if field == "password":
 
                 bad = api.login_user(json={"email": body["email"], "password": new_value})
-                assert not getattr(bad, "ok", False), f"Ожидали отказ в авторизации с новым паролем, но получили {getattr(bad, 'status_code')}"
+                assert not getattr(bad, "ok",
+                                   False), f"Ожидали отказ в авторизации с новым паролем, но получили {getattr(bad, 'status_code')}"
 
                 ok = api.login_user(json={"email": body["email"], "password": register_new_user["password"]})
                 assert getattr(ok, "ok", False), "Старый пароль перестал работать"
@@ -86,13 +90,16 @@ class TestChangeData:
             elif field == "email":
 
                 bad = api.login_user(json={"email": new_value, "password": body["password"]})
-                assert not getattr(bad, "ok", False), f"Ожидали отказ в авторизации с новым email, получили {getattr(bad, 'status_code')}"
+                assert not getattr(bad, "ok",
+                                   False), f"Ожидали отказ в авторизации с новым email, получили {getattr(bad, 'status_code')}"
 
                 ok = api.login_user(json={"email": register_new_user["email"], "password": body["password"]})
                 assert getattr(ok, "ok", False), "Старый email перестал работать"
 
             else:
                 user_data = api.update_user_data(headers={'Authorization': access_token})
-                assert getattr(user_data, "ok", False), f"Не получили данные пользователя: {getattr(user_data, 'status_code')} {getattr(user_data, 'text', '')}"
+                assert getattr(user_data, "ok",
+                               False), f"Не получили данные пользователя: {getattr(user_data, 'status_code')} {getattr(user_data, 'text', '')}"
                 current_name = user_data.json()["user"]["name"]
-                assert current_name == register_new_user["name"], f"Имя изменилось, а не должно было: {current_name} != {register_new_user['name']}"
+                assert current_name == register_new_user[
+                    "name"], f"Имя изменилось, а не должно было: {current_name} != {register_new_user['name']}"

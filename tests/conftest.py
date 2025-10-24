@@ -56,3 +56,24 @@ def valid_ingredients():
 @pytest.fixture
 def invalid_ingredients():
     return ["61c0c5a71d1f82001bdaaa74test", "te61c0c5a71d1f82001bdaaa74st"]
+
+@pytest.fixture
+def make_order_request(register_new_user, valid_ingredients, invalid_ingredients):
+
+    api_client = StellarBurgerApi()
+
+    def _make(auth=True, ingredients_type="valid"):
+        with allure.step("Формируем запрос для создания заказа"):
+            headers = {"Authorization": register_new_user["access_token"]} if auth else {}
+
+            if ingredients_type == "valid":
+                body = {"ingredients": valid_ingredients}
+            elif ingredients_type == "invalid":
+                body = {"ingredients": invalid_ingredients}
+            else:
+                body = {"ingredients": []}
+
+        with allure.step("Отправляем запрос"):
+            return api_client.create_order(json=body, headers=headers)
+
+    return _make

@@ -1,7 +1,8 @@
-import requests
 import allure
+import requests
 
 BASE_URL = "https://stellarburgers.education-services.ru/"
+
 
 class StellarBurgerApi:
     def __init__(self, base_url=BASE_URL, default_headers=None):
